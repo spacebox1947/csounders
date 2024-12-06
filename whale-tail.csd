@@ -1,12 +1,12 @@
 <CsoundSynthesizer>
 <CsOptions>
-    ;-Ma -odac -m128 -+rtaudio=jack -i adc -o dac
+    -Ma -odac -m128 -+rtaudio=jack -i adc -o dac
     --env:SSDIR+=./samples
     ; Select audio/midi flags here according to platform
     ; -odac     ;;;realtime audio out
     ;-iadc    ;;;uncomment -iadc if realtime audio input is needed too
     ; For Non-realtime ouput leave only the line below:
-    -o ice_cleat-test-10.wav -W ;;; for file output any platform
+    ;-o ice_cleat-test-10.wav -W ;;; for file output any platform
     ;-o dac
     ; https://csound.com/docs/manual/loscil3.html
 </CsOptions>
