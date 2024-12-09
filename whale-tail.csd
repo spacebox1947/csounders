@@ -229,7 +229,7 @@
         i "SimpleDiskin" \          ; section A, Ice Cleat BG
             0   118.808             \ ; start, dur
             0   0   1               \  ; array, index, sample speed
-            0.98    0.007    0.85   \ ; atk, dur, sus
+            0.98    0.02    0.85   \ ; atk, dur, sus
             1
 
         ; -- A = 119 s / 2 mins
@@ -243,7 +243,7 @@
         ; -- A+B = 351.319 s / 6 mins
         ; ---- Crunching to Creekside
         i "SimpleDiskin" \          ; section C, crunching to creekside, starts -10 before B ends
-            264 190.423             \   ; creekside starts @ -60ish full dur 190.423
+            264 190.423             \
             0   2   1               \
             0.98    0.007   0.85    \
             1

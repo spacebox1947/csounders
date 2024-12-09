@@ -113,7 +113,7 @@
         iStart = p10    ; spat start
         iEnd = p11      ; spat end
         iDur = p12      ; % p3 dur
-        iLimit = p13    ; 1 = use limit glitchiness
+        iTable = p13    ; 1 = use limit glitchiness
         iMasterdB = p14  ;Master Gain Correction
         iStortStart = p15
         iStortEnd = p16
@@ -130,9 +130,9 @@
             endif
         
         ; cli print stuff
-        printks "Intsr: SimpleDiskin Samp :> %s%n%tDur %d%tPitch %f%tMaster Amps:%f%n", p3, gSamp[iSampleIndex], p3, kSampSpeed, iMasterdB
-        printks "%tAmps Envelope:%t%f :> %f @ %f%n", p3, iAtkGain, iSusGain, iAtkDur
-        printks "%tSpatialize:%t%f :> %f @ %f%n%n", p3, iStart, iEnd, iDur
+        printks "Intsr: SimpleDiskin Samp :> %s%n%tDur %d%tPitch %.2f%tMaster Amps:%.2f%n", p3, gSamp[iSampleIndex], p3, kSampSpeed, iMasterdB
+        printks "%tAmps Envelope:%t%.2f :> %.2f @ %.2f%n", p3, iAtkGain, iSusGain, iAtkDur
+        printks "%tSpatialize:%t%.2f :> %.2f @ %.2f%n%n", p3, iStart, iEnd, iDur
 
         aEnv linseg 0, \
             p3*iAtkDur, iAtkGain, \
@@ -152,19 +152,6 @@
 
         aL, aR pan2 aS, aPan
 
-        ;wavetable
-        /*
-        Very disappointed by chebyshev and sample based wavetables.
-        Most chebys produce a stuck value
-        The samples produce wildly distorted sounds
-        */
-        /* aIndexL = (aL + 1) / 2
-        aIndexR = (aR + 1) / 2
-        aWavL   tablei aIndexL, iLimit, 1
-        aWavR   tablei aIndexR, iLimit, 1
-        outs aWavL*aFade*iMasterdB, aWavR*aFade*iMasterdB */ 
-
-        iTable = iLimit
         ; distort
         /*
         I really enjoy the warm fuzziness of this. The parials (odd, even) and white noise seem to provide
@@ -177,39 +164,101 @@
         aDistR  distort aR, kStort, iTable
 
         outs aDistL*aFade*iMasterdB, aDistR*aFade*iMasterdB
+    endin
+
+    instr RingWhale
+        iSampleArray = p4
+        iSampleIndex = p5
+        kSampSpeed = p6 ;Sample Pitch
+        iAtkGain = p7   ;AS Atk Gain
+        iAtkDur = p8    ;AS Atk Dur
+        iSusGain = p9   ;AS Sus Gain
+        iStart = p10    ; spat start
+        iEnd = p11      ; spat end
+        iDur = p12      ; % p3 dur
+        iRingHz = p13
+        iRingEnd = p14
+        iModeIndex = p15
+        iPWM = p16
+        iWetDry = p17
+        iMasterdB = p18  ;Master Gain Correction
+
+
+        iModes[] init 7
+        iModes = fillarray(12, 10, 8, 6, 4, 2, 0)
+        SModes[] init 7
+        SModes = fillarray("Triangle", "Square Wave", "Integrated Sawtooth", "Pulse", "Saw Ramp", "PWM", "Sawtooth")
+
+        gSamp[] init 8      ; longest group of files - 1
+            if iSampleArray == 1 then   ; voice clips
+                gSamp fillarray gS_voice1, gS_voice2, gS_voice3, gS_voice4, gS_voice5, gS_voice6, gS_voice7, gS_voice8, gS_voice9
+            elseif iSampleArray == 2 then
+                gSamp fillarray gS_boogaloo1, gS_boogaloo2, gS_boogaloo3, gS_boogaloo4, gS_boogaloo5, gS_boogaloo6
+            elseif iSampleArray == 3 then
+                gSamp fillarray gS_tasty1, gS_tasty2, gS_tasty3, gS_tasty4, gS_tasty5, gS_tasty6
+            else
+                gSamp fillarray gS_file1, gS_file2, gS_file3, gS_file4, gS_file5, gS_file6, gS_file7
+            endif
+        
+        ; cli print stuff
+        printks "Intsr: SimpleDiskin Samp :> %s%n%tDur %d%tPitch %.2f%tMaster Amps:%.2f%n", p3, gSamp[iSampleIndex], p3, kSampSpeed, iMasterdB
+        printks "%tAmps Envelope:%t%.2f :> %.2f @ %.2f%n", p3, iAtkGain, iSusGain, iAtkDur
+        printks "%tSpatialize:%t%.2f :> %.2f @ %.2f%n", p3, iStart, iEnd, iDur
+        printks "%tRing Mod: %s%t%.2f Hz :> %.2f Hz%t%.2f WetDry%t%.2f PWM%n", p3, SModes[iModeIndex], iRingHz, iRingEnd, iWetDry, iPWM
+        printks "%n", p3
+
+        aEnv linseg 0, \
+            p3*iAtkDur, iAtkGain, \
+            p3-(p3*iAtkDur), iSusGain
+
+        aPan linseg 0, \
+            p3*iDur, iStart, \
+            p3-(p3*iDur), iEnd
+
+        aFade linseg 1, p3*0.99, 1, p3*0.01, 0
+
+        aSamp[] diskin \
+            gSamp[iSampleIndex], kSampSpeed, 0, 1
+
+        ; stero -> mono
+        aS = (aSamp[0]+aSamp[1])*0.5
+
+        aL, aR pan2 aS, aPan
 
         ; ring mod simple
         /*
             Ring mod has lots of potential, but you would need to curate the
             significant signal loss of amplitude carefully
-        */
-        /* if (iLimit > 0) then
-            ;aSigL limit aL, 0, 1
-            ;aSigR limit aR, 0, 1
-            aMod    poscil 1, iLimit
-            aRML = aMod * aL 
-            aRMR = aMod * aR
-            outs aRML*iMasterdB*aFade, aRMR*iMasterdB*aFade
-        else
-            outs aL*iMasterdB*aFade, aR*iMasterdB*aFade
-        endif */
 
-        ;ringmod sample
-        /*
-            way too much phase cancellation
+            low frequencies on an oscillator are smoothly chopped up (when using Poscil3)
+            
+            saw or PWm are probably best to replicate bad limiter opcode
+            pulse will require LOTS of amp control
         */
-        /* aYeah[] diskin gS_boogaloo4, 1, 0, 1
-        aModL = aL * aYeah[0]
-        aModR = aR * aYeah[1]
-        outs aModL*iMasterdB*aFade, aModR*iMasterdB*aFade
-        */
+        kHz     linseg  iRingHz, p3, iRingEnd
+        if iPWM <= 0 then
+            iPWM = 0.01
+        elseif iPWM >= 1 then
+            iPWM = 0.99
+        endif 
+        aMod    vco2    1, kHz, iModes[iModeIndex], iPWM
+        aRML = aMod * aL 
+        aRMR = aMod * aR
+
+        ; > iWetDry = more processed signal
+        iWet = iWetDry
+        iDry = 1 - iWetDry
+        aSigL = ((aRML*iWet) + (aL*iDry)) * iMasterdB * aFade
+        aSigR = ((aRMR*iWet) + (aR*iDry)) * iMasterdB * aFade
+
+        outs aSigL, aSigR
     endin
+
 
 </CsInstruments>
 
 <CsScore>
-    
-            i "FuzzWhale" \
+            /* i "FuzzWhale" \
                 0   5              \
                 2   3   .98           \
                 1   0.125    .75     \
@@ -250,7 +299,51 @@
                 1   0.125    .75     \
                 0.25    0.25      .35     \
                 16   1  \
-                1   0
+                1   0 */
+            i "RingWhale" \
+                0   5                   \
+                2   3   1               \
+                1   1   1               \
+                .5  .5  .5              \ 
+                50  20   0  0.5         \ ; hz start, end, wavmode, pwm
+                .5  1                   ; wetdry, masterDb
+
+            i "RingWhale" \
+                +   5                   \
+                2   3   1               \
+                1   1   1               \
+                .5  .5  .5              \ 
+                50  20   1  0.5         \ ; hz start, end, wavmode, pwm
+                .5  1                   ; wetdry, masterDb
+            i "RingWhale" \
+                +   5                   \
+                2   3   1               \
+                1   1   1               \
+                .5  .5  .5              \ 
+                50  20   2  0.5         \ ; hz start, end, wavmode, pwm
+                .5  1                   ; wetdry, masterDb
+            i "RingWhale" \
+                +   5                   \
+                2   3   1               \
+                1   1   1               \
+                .5  .5  .5              \ 
+                50  20   4  0.5         \ ; hz start, end, wavmode, pwm
+                .5  1                   ; wetdry, masterDb
+
+            i "RingWhale" \
+                +   5                   \
+                2   3   1               \
+                1   1   1               \
+                .5  .5  .5              \ 
+                50  10   5  0.5         \ ; hz start, end, wavmode, pwm
+                .5  1                   ; wetdry, masterDb
+            i "RingWhale" \
+                +   5                   \
+                2   3   1               \
+                1   1   1               \
+                .5  .5  .5              \ 
+                50  5   6  0.5         \ ; hz start, end, wavmode, pwm
+                .5  1                   ; wetdry, masterDb
             
             
 </CsScore>
