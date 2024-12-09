@@ -44,6 +44,24 @@
             0.6 0.95 0.6      \ ; spat s->e, %p3
             700 0              \ ; in, channel
             1                  \ ; masterdb
+    ; busy-fuzz-3.wav
+        ; boogaloo 4 fuzz
+        i   115 0 42.9          \ ; boogaloo sampler
+            3   .8   0           \ ; index, speed, offset
+            1   0.25 0.08      \ ; gain, ramp, fade
+            250 0                 ; bus out, channel#
+        i   250 0 42.9             \
+            1500 0.65 0              \
+            115 700 0               
+        i   700 0 42.9          \ ; fuzz
+            0.05 0.15 1   3   \ ; wet dry s->e, gain corr, type
+            250 900 0             ; in, out, channel
+
+        ; l channel-ish fuzz
+        i   900 0 43          \
+            .5 .5 1      \ ; spat s->e, %p3
+            700 0              \ ; in, channel
+            .75                  \ ; masterdb
 [ RESONANT CREEK SIDE EMERGES]
     ; Resonant Creekside // First 30 seconds
         ; this chunk overlaps, which causes some probs ... but could work if 'skating' over a long form out

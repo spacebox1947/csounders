@@ -3,15 +3,9 @@
     ;-Ma -odac -m128 -+rtaudio=jack -i adc -o dac
     ;-+rtaudio=jack -i adc -o dac
     --env:SSDIR+=./samples
-    -o busy-fuzz-3.wav -W ;;; for file output any platform
+    -o low-creek-quad-1a.wav -W ;;; for file output any platform
     ;-o dac
 </CsOptions>
-; ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
-/*
-    Discovered several issues in the file.
-    It appears that using Mixer and vbap or pan (4) does not work.
-    outch also fails. 
-*/
 ; ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
 <CsInstruments>
 
@@ -20,7 +14,7 @@
     nchnls = 4
     0dbfs  = 1
 
-    vbaplsinit 2, 4, 0, 90, 180, -90
+    vbaplsinit 2, 4, -45, 45, 135, -135
 
     ; Bpass arrays
         giBpUpAmps[] = fillarray(1, 0.5, 0.25, 0.125, 0.09, 0.06, 0.03)
@@ -118,7 +112,7 @@
             MixerSend aLandmark[1], iSelf, iBus, iChannel+1
         endin
 
-        instr 111 ;Sampler 111
+        instr 111 ;Sampler 111 gSlandmark
             /* Plays a SF as is */
             iSelf = 111
             iSampleIndex = p4   ; only looks @ gSlandmark
@@ -681,24 +675,40 @@
 </CsInstruments>
 
 <CsScore>
-; busy-fuzz-3.wav
-    ; boogaloo 4 fuzz
-    i   115 0 42.9          \ ; boogaloo sampler
-        3   .8   0           \ ; index, speed, offset
-        1   0.25 0.08      \ ; gain, ramp, fade
-        250 0                 ; bus out, channel#
-    i   250 0 42.9             \
-        1500 0.65 0              \
-        115 700 0               
-    i   700 0 42.9          \ ; fuzz
-        0.05 0.15 1   3   \ ; wet dry s->e, gain corr, type
-        250 900 0             ; in, out, channel
 
-    ; l channel-ish fuzz
-    i   900 0 43          \
-        .5 .5 1      \ ; spat s->e, %p3
-        700 0              \ ; in, channel
-        .75                  \ ; masterdb
+    ; low-creek-quad-1a.wav GREAT
+        i   110 0    75          \   ;diskin2 110
+            4   0.5 0             \   ;index, speed, offset
+            1 0.09 0.09    \   ; atk, adur, fdur
+            225 0                  ;out, channel
+        i   225 0    75          \   ;bp cluster
+            150 50 20 .6        \ 
+            110 250 0 
+        i   250 0    75          \   ; var filter
+            650    0.45    0   \   ; hz, q, type
+            225 251 0               ; in, out, channel
+        i   251 0    75          \   ; var filter
+            550    0.45    0   \   ; hz, q, type
+            250 925 0               ; in, out, channel
+
+        i   110 135  70          \   ;diskin2 110
+            4   0.48 0             \   ;index, speed, offset
+            1 0.09 0.09    \   ; atk, adur, fdur
+            225 0                  ;out, channel
+        i   225 135  70          \   ;bp cluster
+            150 50 20 .6        \ 
+            110 250 0 
+        i   250 135  70          \   ; var filter
+            650    0.45    0   \   ; hz, q, type
+            225 251 0               ; in, out, channel
+        i   251 135  70          \   ; var filter
+            550    0.45    0   \   ; hz, q, type
+            250 925 0               ; in, out, channel
+
+        i   925 0   210          \
+        -45 -135            \   ; pan start, end
+        251 0               \
+        1.5                     ; masterdB
 
 </CsScore>
 </CsoundSynthesizer>
